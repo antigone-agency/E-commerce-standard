@@ -829,154 +829,205 @@ export default function Promotions() {
 
       {/* ══════════ MODAL : Créer coupon ══════════ */}
       {showCreate && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowCreate(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 space-y-5" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800">Créer un coupon</h3>
-              <button onClick={() => setShowCreate(false)} className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors">
-                <span className="material-symbols-outlined text-slate-400">close</span>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={() => setShowCreate(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+
+            {/* ── Header ── */}
+            <div className="bg-white rounded-t-2xl border-b border-slate-100 px-6 py-4 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-brand/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-brand" style={{ fontSize: '20px' }}>confirmation_number</span>
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-800 leading-tight">Créer un coupon</h3>
+                  <p className="text-[11px] text-slate-400">Configurez les détails de votre nouveau coupon</p>
+                </div>
+              </div>
+              <button onClick={() => setShowCreate(false)} className="w-8 h-8 flex items-center justify-center hover:bg-slate-100 rounded-lg transition-colors">
+                <span className="material-symbols-outlined text-slate-400" style={{ fontSize: '20px' }}>close</span>
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Code */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Code du coupon <InfoTip text="Code unique que le client saisit lors du paiement pour bénéficier de la réduction." /></label>
-                <div className="flex gap-2">
-                  <input type="text" value={newCode} onChange={e => setNewCode(e.target.value.toUpperCase())} placeholder="Ex: PROMO20"
-                    className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none font-bold uppercase" />
-                  <button onClick={() => setNewCode(genCode())} className="px-3 py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200 transition-colors whitespace-nowrap" title="Générer un code automatique">
-                    <span className="material-symbols-outlined text-sm align-middle mr-1">casino</span>Auto
-                  </button>
+            <div className="p-6 space-y-6 overflow-y-auto overflow-x-hidden flex-1 min-h-0">
+              {/* ── Section : Informations générales ── */}
+              <div className="bg-slate-50/80 rounded-xl p-5 border border-slate-100 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="material-symbols-outlined text-slate-400" style={{ fontSize: '16px' }}>tune</span>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Informations générales</p>
                 </div>
-              </div>
-
-              {/* Type */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Type de coupon <InfoTip text="Détermine le type de réduction : pourcentage, montant fixe, livraison gratuite, cadeau ou BOGO (1 acheté = 1 offert)." /></label>
-                <CustomSelect value={newType} onChange={setNewType} options={typeOptions} />
-              </div>
-
-              {/* Valeur */}
-              {(newType === 'pourcentage' || newType === 'fixe' || newType === 'cadeau') && (
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Valeur {newType === 'pourcentage' ? '(%)' : '(DT)'} <InfoTip text="Montant de la réduction à appliquer. En pourcentage (%) ou en dinars (DT) selon le type choisi." /></label>
-                  <input type="number" value={newValeur} onChange={e => setNewValeur(e.target.value)} placeholder="Ex: 15"
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none" />
-                </div>
-              )}
-
-              {/* Montant minimum */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Montant minimum (DT) <InfoTip text="Le client doit atteindre ce montant dans son panier pour utiliser le coupon. Mettez 0 pour aucun minimum requis." /></label>
-                <input type="number" value={newMontantMin} onChange={e => setNewMontantMin(e.target.value)} placeholder="0 = pas de minimum"
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none" />
-              </div>
-
-              {/* Segment */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Segment client <InfoTip text="Cible un groupe spécifique de clients. Sélectionnez 'Tous les clients' pour un coupon accessible à tout le monde." /></label>
-                <CustomSelect value={newSegment} onChange={setNewSegment} options={segmentOptions} />
-              </div>
-
-              {/* Auto */}
-              <div className="space-y-2 flex items-end">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <button type="button" onClick={() => setNewAuto(!newAuto)}
-                    className={`relative w-11 h-6 rounded-full transition-colors ${newAuto ? 'bg-brand' : 'bg-slate-300'}`}>
-                    <span className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow transition-transform ${newAuto ? 'translate-x-5' : ''}`} />
-                  </button>
-                  <span className="text-sm font-medium text-slate-700">Coupon automatique <InfoTip text="Si activé, le coupon s'applique automatiquement au panier du client sans qu'il ait besoin de saisir un code." /></span>
-                </label>
-              </div>
-            </div>
-
-            {/* Planification */}
-            <div className="border-t border-slate-100 pt-5">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Planification <InfoTip text="Définissez la période de validité du coupon. Sans dates, le coupon est actif immédiatement et sans limite de temps." /></p>
-                <button type="button" onClick={() => setShowPlanification(!showPlanification)}
-                  className={`relative w-11 h-6 rounded-full transition-colors ${showPlanification ? 'bg-brand' : 'bg-slate-300'}`}>
-                  <span className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow transition-transform ${showPlanification ? 'translate-x-5' : ''}`} />
-                </button>
-              </div>
-              {showPlanification ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Date début <InfoTip text="Date à partir de laquelle le coupon devient actif et utilisable." /></label>
-                  <input type="date" value={newDateDebut} onChange={e => setNewDateDebut(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Heure début <InfoTip text="Heure précise d'activation du coupon le jour de début." /></label>
-                  <input type="time" value={newHeureDebut} onChange={e => setNewHeureDebut(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Date fin <InfoTip text="Date à laquelle le coupon expire et ne peut plus être utilisé." /></label>
-                  <input type="date" value={newDateFin} onChange={e => setNewDateFin(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Heure fin <InfoTip text="Heure précise d'expiration du coupon le jour de fin." /></label>
-                  <input type="time" value={newHeureFin} onChange={e => setNewHeureFin(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none" />
-                </div>
-              </div>
-              ) : (
-                <p className="text-xs text-slate-400 italic">Aucune planification — coupon actif immédiatement</p>
-              )}
-            </div>
-
-            {/* Limites */}
-            <div className="border-t border-slate-100 pt-5">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Limites d'utilisation <InfoTip text="Contrôlez combien de fois ce coupon peut être utilisé au total et par client individuel." /></p>
-              <div className="flex gap-2 mb-4">
-                <button type="button" onClick={() => setLimiteMode('unique')}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${limiteMode === 'unique' ? 'border-brand bg-brand/10 text-brand' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`}>
-                  Utilisation unique
-                </button>
-                <button type="button" onClick={() => setLimiteMode('multiple')}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${limiteMode === 'multiple' ? 'border-brand bg-brand/10 text-brand' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`}>
-                  Utilisation multiple
-                </button>
-              </div>
-              {limiteMode === 'unique' ? (
-                <p className="text-xs text-slate-400 italic">1 utilisation par client — limites définies automatiquement</p>
-              ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">Limite globale (0 = illimité) <InfoTip text="Nombre total d'utilisations autorisées pour ce coupon. Mettez 0 pour des utilisations illimitées." /></label>
-                    <input type="number" value={newLimiteGlobale} onChange={e => setNewLimiteGlobale(e.target.value)} placeholder="Ex: 100"
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none" />
+                  {/* Code */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Code du coupon <InfoTip text="Code unique que le client saisit lors du paiement pour bénéficier de la réduction." /></label>
+                    <div className="flex gap-2">
+                      <input type="text" value={newCode} onChange={e => setNewCode(e.target.value.toUpperCase())} placeholder="Ex: PROMO20"
+                        className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand/30 focus:border-brand outline-none font-bold uppercase transition-all" />
+                      <button onClick={() => setNewCode(genCode())} className="px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-50 hover:border-slate-300 transition-all whitespace-nowrap" title="Générer un code automatique">
+                        <span className="material-symbols-outlined text-sm align-middle mr-1">casino</span>Auto
+                      </button>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">Limite par client (0 = illimité) <InfoTip text="Nombre maximum de fois qu'un même client peut utiliser ce coupon. Mettez 0 pour illimité." /></label>
-                    <input type="number" value={newLimiteClient} onChange={e => setNewLimiteClient(e.target.value)} placeholder="Ex: 1"
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none" />
+
+                  {/* Type */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Type de coupon <InfoTip text="Détermine le type de réduction : pourcentage, montant fixe, livraison gratuite, cadeau ou BOGO (1 acheté = 1 offert)." /></label>
+                    <CustomSelect value={newType} onChange={setNewType} options={typeOptions} />
+                  </div>
+
+                  {/* Valeur */}
+                  {(newType === 'pourcentage' || newType === 'fixe' || newType === 'cadeau') && (
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Valeur {newType === 'pourcentage' ? '(%)' : '(DT)'} <InfoTip text="Montant de la réduction à appliquer. En pourcentage (%) ou en dinars (DT) selon le type choisi." /></label>
+                      <input type="number" value={newValeur} onChange={e => setNewValeur(e.target.value)} placeholder="Ex: 15"
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand/30 focus:border-brand outline-none transition-all" />
+                    </div>
+                  )}
+
+                  {/* Montant minimum */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Montant minimum (DT) <InfoTip text="Le client doit atteindre ce montant dans son panier pour utiliser le coupon. Mettez 0 pour aucun minimum requis." /></label>
+                    <input type="number" value={newMontantMin} onChange={e => setNewMontantMin(e.target.value)} placeholder="0 = pas de minimum"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand/30 focus:border-brand outline-none transition-all" />
+                  </div>
+
+                  {/* Segment */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Segment client <InfoTip text="Cible un groupe spécifique de clients. Sélectionnez 'Tous les clients' pour un coupon accessible à tout le monde." /></label>
+                    <CustomSelect value={newSegment} onChange={setNewSegment} options={segmentOptions} />
+                  </div>
+
+                  {/* Auto */}
+                  <div className="space-y-1.5 flex items-end">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <button type="button" onClick={() => setNewAuto(!newAuto)}
+                        className={`relative w-11 h-6 rounded-full transition-colors ${newAuto ? 'bg-brand' : 'bg-slate-300'}`}>
+                        <span className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow transition-transform ${newAuto ? 'translate-x-5' : ''}`} />
+                      </button>
+                      <span className="text-sm font-medium text-slate-700">Coupon automatique <InfoTip text="Si activé, le coupon s'applique automatiquement au panier du client sans qu'il ait besoin de saisir un code." /></span>
+                    </label>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
 
-            {/* Conditions — Catégories */}
-            <div className="border-t border-slate-100 pt-5">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Produits ciblés (optionnel) <InfoTip text="Restreignez le coupon à certaines catégories. Si aucune n'est sélectionnée, le coupon s'applique à tous les produits." /></p>
-              <div className="flex flex-wrap gap-2">
-                {categoriesList.map(cat => (
-                  <button key={cat} type="button" onClick={() => toggleCatSelection(cat)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${newCategories.includes(cat) ? 'border-badge bg-badge/10 text-badge' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`}>
-                    {cat}
+              {/* ── Section : Planification ── */}
+              <div className="bg-slate-50/80 rounded-xl p-5 border border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-slate-400" style={{ fontSize: '16px' }}>calendar_month</span>
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Planification <InfoTip text="Définissez la période de validité du coupon. Sans dates, le coupon est actif immédiatement et sans limite de temps." /></p>
+                  </div>
+                  <button type="button" onClick={() => setShowPlanification(!showPlanification)}
+                    className={`relative w-11 h-6 rounded-full transition-colors ${showPlanification ? 'bg-brand' : 'bg-slate-300'}`}>
+                    <span className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow transition-transform ${showPlanification ? 'translate-x-5' : ''}`} />
                   </button>
-                ))}
+                </div>
+                {showPlanification ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase">Date début <InfoTip text="Date à partir de laquelle le coupon devient actif et utilisable." /></label>
+                      <input type="date" value={newDateDebut} onChange={e => setNewDateDebut(e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm focus:ring-2 focus:ring-brand/30 focus:border-brand outline-none transition-all" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase">Heure début <InfoTip text="Heure précise d'activation du coupon le jour de début." /></label>
+                      <input type="time" value={newHeureDebut} onChange={e => setNewHeureDebut(e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm focus:ring-2 focus:ring-brand/30 focus:border-brand outline-none transition-all" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase">Date fin <InfoTip text="Date à laquelle le coupon expire et ne peut plus être utilisé." /></label>
+                      <input type="date" value={newDateFin} onChange={e => setNewDateFin(e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm focus:ring-2 focus:ring-brand/30 focus:border-brand outline-none transition-all" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase">Heure fin <InfoTip text="Heure précise d'expiration du coupon le jour de fin." /></label>
+                      <input type="time" value={newHeureFin} onChange={e => setNewHeureFin(e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm focus:ring-2 focus:ring-brand/30 focus:border-brand outline-none transition-all" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 mt-3 text-xs text-slate-400">
+                    <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>schedule</span>
+                    <span className="italic">Aucune planification — coupon actif immédiatement</span>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Section : Limites d'utilisation ── */}
+              <div className="bg-slate-50/80 rounded-xl p-5 border border-slate-100">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="material-symbols-outlined text-slate-400" style={{ fontSize: '16px' }}>rule</span>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Limites d'utilisation <InfoTip text="Contrôlez combien de fois ce coupon peut être utilisé au total et par client individuel." /></p>
+                </div>
+                <div className="inline-flex bg-white border border-slate-200 rounded-lg p-0.5 mb-4">
+                  <button type="button" onClick={() => setLimiteMode('unique')}
+                    className={`px-4 py-2 rounded-md text-xs font-bold transition-all ${limiteMode === 'unique' ? 'bg-brand text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                    <span className="material-symbols-outlined align-middle mr-1" style={{ fontSize: '14px' }}>person</span>
+                    Utilisation unique
+                  </button>
+                  <button type="button" onClick={() => setLimiteMode('multiple')}
+                    className={`px-4 py-2 rounded-md text-xs font-bold transition-all ${limiteMode === 'multiple' ? 'bg-brand text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                    <span className="material-symbols-outlined align-middle mr-1" style={{ fontSize: '14px' }}>group</span>
+                    Utilisation multiple
+                  </button>
+                </div>
+                {limiteMode === 'unique' ? (
+                  <div className="flex items-center gap-2 text-xs text-slate-400">
+                    <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>check_circle</span>
+                    <span className="italic">1 utilisation par client — limites définies automatiquement</span>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase">Limite globale (0 = illimité) <InfoTip text="Nombre total d'utilisations autorisées pour ce coupon. Mettez 0 pour des utilisations illimitées." /></label>
+                      <input type="number" value={newLimiteGlobale} onChange={e => setNewLimiteGlobale(e.target.value)} placeholder="Ex: 100"
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand/30 focus:border-brand outline-none transition-all" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase">Limite par client (0 = illimité) <InfoTip text="Nombre maximum de fois qu'un même client peut utiliser ce coupon. Mettez 0 pour illimité." /></label>
+                      <input type="number" value={newLimiteClient} onChange={e => setNewLimiteClient(e.target.value)} placeholder="Ex: 1"
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand/30 focus:border-brand outline-none transition-all" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Section : Produits ciblés ── */}
+              <div className="bg-slate-50/80 rounded-xl p-5 border border-slate-100">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="material-symbols-outlined text-slate-400" style={{ fontSize: '16px' }}>category</span>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Produits ciblés (optionnel) <InfoTip text="Restreignez le coupon à certaines catégories. Si aucune n'est sélectionnée, le coupon s'applique à tous les produits." /></p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {categoriesList.length > 0 ? categoriesList.map(cat => (
+                    <button key={cat} type="button" onClick={() => toggleCatSelection(cat)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${newCategories.includes(cat) ? 'border-brand bg-brand/10 text-brand shadow-sm' : 'border-slate-200 bg-white text-slate-500 hover:bg-white hover:border-slate-300'}`}>
+                      {newCategories.includes(cat) && <span className="material-symbols-outlined align-middle mr-1" style={{ fontSize: '12px' }}>check</span>}
+                      {cat}
+                    </button>
+                  )) : (
+                    <p className="text-xs text-slate-400 italic">Aucune catégorie disponible</p>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Submit */}
-            <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
-              <button onClick={() => setShowCreate(false)} className="px-4 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">Annuler</button>
-              <button onClick={submitCreate} disabled={submitting} className="px-6 py-2.5 text-sm font-semibold text-white bg-btn rounded-lg hover:bg-btn-dark transition-colors shadow-md disabled:opacity-50">
-                {submitting ? 'Création...' : 'Créer le coupon'}
+            {/* ── Footer ── */}
+            <div className="bg-white border-t border-slate-100 rounded-b-2xl px-6 py-4 flex justify-end gap-3 shrink-0">
+              <button onClick={() => setShowCreate(false)} className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">
+                Annuler
+              </button>
+              <button onClick={submitCreate} disabled={submitting} className="px-6 py-2.5 text-sm font-semibold text-white bg-btn rounded-lg hover:bg-btn-dark transition-colors shadow-md disabled:opacity-50 flex items-center gap-2">
+                {submitting ? (
+                  <>
+                    <span className="material-symbols-outlined animate-spin" style={{ fontSize: '16px' }}>progress_activity</span>
+                    Création...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>add_circle</span>
+                    Créer le coupon
+                  </>
+                )}
               </button>
             </div>
           </div>

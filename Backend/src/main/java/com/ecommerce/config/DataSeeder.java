@@ -12,6 +12,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
+import java.util.Set;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -20,6 +23,7 @@ public class DataSeeder implements CommandLineRunner {
         private final RoleRepository roleRepository;
         private final SegmentRepository segmentRepository;
         private final UserRepository userRepository;
+        private final PermissionRepository permissionRepository;
         private final PasswordEncoder passwordEncoder;
         private final TvaRateRepository tvaRateRepository;
         private final TvaConfigRepository tvaConfigRepository;
@@ -42,8 +46,18 @@ public class DataSeeder implements CommandLineRunner {
 
         private void seedRoles() {
                 if (roleRepository.count() > 0) {
-                        log.info("Rôles déjà initialisés, skip seed.");
-                        return;
+                        // Detect old enum values — purge and re-seed if needed
+                        Set<String> currentModules = Set.of(Arrays.stream(PermissionModule.values())
+                                        .map(Enum::name).toArray(String[]::new));
+                        boolean hasOldData = permissionRepository.findAll().stream()
+                                        .anyMatch(p -> !currentModules.contains(p.getModule().name()));
+                        if (!hasOldData) {
+                                log.info("Rôles déjà initialisés, skip seed.");
+                                return;
+                        }
+                        log.info("Anciens modules détectés — purge et re-seed des rôles...");
+                        permissionRepository.deleteAll();
+                        roleRepository.deleteAll();
                 }
 
                 log.info("Initialisation des rôles et permissions...");
@@ -60,7 +74,7 @@ public class DataSeeder implements CommandLineRunner {
                 }
                 roleRepository.save(superAdmin);
 
-                // ── ADMIN: most permissions, except Roles & Logs ──
+                // ── ADMIN: all except Roles & Permissions ──
                 Role admin = Role.builder()
                                 .name("ADMIN")
                                 .label("Administrateur")
@@ -68,21 +82,22 @@ public class DataSeeder implements CommandLineRunner {
                                 .build();
                 for (PermissionModule module : PermissionModule.values()) {
                         boolean granted = module != PermissionModule.ROLES_PERMISSIONS
-                                        && module != PermissionModule.LOGS_EXPORT
-                                        && module != PermissionModule.PAIEMENTS_TVA_LIVRAISON;
+                                        && module != PermissionModule.COMPTE_HEBERGEMENT;
                         admin.addPermission(Permission.builder()
                                         .module(module).granted(granted).build());
                 }
                 roleRepository.save(admin);
 
-                // ── CLIENT: only orders access ──
+                // ── CLIENT: only dashboard + orders ──
                 Role client = Role.builder()
                                 .name("CLIENT")
                                 .label("Client")
                                 .description("Compte client standard avec accès portail commandes uniquement.")
                                 .build();
                 for (PermissionModule module : PermissionModule.values()) {
-                        boolean granted = module == PermissionModule.COMMANDES_RETOURS;
+                        boolean granted = module == PermissionModule.TABLEAU_DE_BORD
+                                        || module == PermissionModule.COMMANDES
+                                        || module == PermissionModule.RETOURS;
                         client.addPermission(Permission.builder()
                                         .module(module).granted(granted).build());
                 }

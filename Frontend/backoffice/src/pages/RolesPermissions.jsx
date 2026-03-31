@@ -219,6 +219,9 @@ export default function RolesPermissions() {
     }))
   }
 
+  // Roles visible dans la matrice (exclure CLIENT — pas d’accès au backoffice)
+  const matrixRoles = roles.filter((r) => r.name !== 'CLIENT')
+
   const moduleKeys = Object.keys(MODULE_LABELS)
 
   return (
@@ -260,7 +263,7 @@ export default function RolesPermissions() {
           <div className="h-px flex-1 bg-slate-200" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {roles.map((role) => {
+          {roles.filter((role) => role.name !== 'CLIENT').map((role) => {
             const style = ROLE_ICONS[role.name] || DEFAULT_ICON
             return (
               <div
@@ -321,8 +324,8 @@ export default function RolesPermissions() {
             <thead className="bg-slate-50 text-slate-500 text-[11px] uppercase tracking-wider font-bold">
               <tr>
                 <th className="px-5 py-3 text-left" style={{ width: '40%' }}>Page</th>
-                {roles.map((r) => (
-                  <th key={r.id} className="px-3 py-3 text-center" style={{ width: `${60 / Math.max(roles.length, 1)}%` }}>
+                {matrixRoles.map((r) => (
+                  <th key={r.id} className="px-3 py-3 text-center" style={{ width: `${60 / Math.max(matrixRoles.length, 1)}%` }}>
                     {r.label || r.name}
                   </th>
                 ))}
@@ -332,7 +335,7 @@ export default function RolesPermissions() {
               {MODULE_SECTIONS.map((section) => (
                 <>
                   <tr key={section.title} className="bg-slate-50/50">
-                    <td colSpan={roles.length + 1} className="px-5 py-2">
+                    <td colSpan={matrixRoles.length + 1} className="px-5 py-2">
                       <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-slate-400" style={{ fontSize: '15px' }}>{section.icon}</span>
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{section.title}</span>
@@ -342,7 +345,7 @@ export default function RolesPermissions() {
                   {section.keys.map((moduleKey) => (
                     <tr key={moduleKey} className="border-t border-slate-100/80 hover:bg-slate-50/60 transition-colors">
                       <td className="px-5 py-2 text-[13px] font-medium text-slate-700">{MODULE_LABELS[moduleKey]}</td>
-                      {roles.map((r) => (
+                      {matrixRoles.map((r) => (
                         <td key={r.id} className="px-3 py-2">
                           <div className="flex items-center justify-center">
                             {r.name === 'SUPER_ADMIN' ? (
@@ -369,7 +372,7 @@ export default function RolesPermissions() {
           </table>
         </div>
         <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-          <span className="text-[11px] text-slate-400">{moduleKeys.length} pages · {roles.length} rôles</span>
+          <span className="text-[11px] text-slate-400">{moduleKeys.length} pages · {matrixRoles.length} rôles</span>
           <button
             onClick={handleSaveMatrix}
             disabled={savingMatrix}

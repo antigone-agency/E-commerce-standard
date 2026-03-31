@@ -6,9 +6,11 @@ import com.ecommerce.dto.response.AuthResponse;
 import com.ecommerce.dto.response.UserResponse;
 import com.ecommerce.entity.RefreshToken;
 import com.ecommerce.entity.Role;
+import com.ecommerce.entity.Segment;
 import com.ecommerce.entity.User;
 import com.ecommerce.enums.AccountStatus;
 import com.ecommerce.repository.RoleRepository;
+import com.ecommerce.repository.SegmentRepository;
 import com.ecommerce.repository.UserRepository;
 import com.ecommerce.security.JwtService;
 import com.ecommerce.security.UserPrincipal;
@@ -29,6 +31,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final SegmentRepository segmentRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -43,6 +46,9 @@ public class AuthService {
         Role clientRole = roleRepository.findByName("CLIENT")
                 .orElseThrow(() -> new RuntimeException("Rôle CLIENT non trouvé"));
 
+        Segment nouveauSegment = segmentRepository.findByName("NOUVEAU")
+                .orElseThrow(() -> new RuntimeException("Segment NOUVEAU non trouvé"));
+
         User user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
@@ -52,6 +58,7 @@ public class AuthService {
                 .dateOfBirth(request.getDateOfBirth())
                 .gender(request.getGender())
                 .role(clientRole)
+                .segment(nouveauSegment)
                 .status(AccountStatus.ACTIVE)
                 .build();
 
@@ -123,6 +130,12 @@ public class AuthService {
     }
 
     public UserResponse mapToUserResponse(User user) {
+        Map<String, Boolean> permissionsMap = new java.util.HashMap<>();
+        if (user.getRole() != null && user.getRole().getPermissions() != null) {
+            user.getRole().getPermissions().forEach(p ->
+                permissionsMap.put(p.getModule().name(), p.isGranted())
+            );
+        }
         return UserResponse.builder()
                 .id(user.getId())
                 .firstName(user.getFirstName())
@@ -143,6 +156,7 @@ public class AuthService {
                 .note(user.getNote())
                 .lastLogin(user.getLastLogin())
                 .createdAt(user.getCreatedAt())
+                .permissions(permissionsMap)
                 .build();
     }
 }

@@ -28,7 +28,7 @@ public class Role {
     private String description;
 
     @Builder.Default
-    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Permission> permissions = new ArrayList<>();
 
     @Builder.Default

@@ -8,6 +8,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Data
 @Builder
@@ -32,4 +33,5 @@ public class UserResponse {
     private String note;
     private LocalDateTime lastLogin;
     private LocalDateTime createdAt;
+    private Map<String, Boolean> permissions;
 }

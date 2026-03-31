@@ -2,32 +2,42 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useCallback } from 'react'
 
 const navItems = [
-  { path: '/dashboard',   label: 'Tableau de bord', icon: 'dashboard' },
-  { path: '/produits',    label: 'Produits',         icon: 'inventory_2' },
-  { path: '/commandes',   label: 'Commandes',        icon: 'shopping_cart' },
-  { path: '/retours',     label: 'Retours',          icon: 'assignment_return' },
-  { path: '/clients',     label: 'Clients',          icon: 'group' },
-  { path: '/analyses',    label: 'Analyses',         icon: 'analytics' },
-  { path: '/collections', label: 'Collections',       icon: 'category' },
-  { path: '/categories', label: 'Catégories',        icon: 'folder' },
-  { path: '/bannieres',  label: 'Bannières',          icon: 'view_carousel' },
-  { path: '/tva-livraison', label: 'TVA & Livraison',   icon: 'local_shipping' },
+  { path: '/dashboard',      label: 'Tableau de bord',  icon: 'dashboard',        moduleKey: 'TABLEAU_DE_BORD' },
+  { path: '/produits',       label: 'Produits',          icon: 'inventory_2',      moduleKey: 'PRODUITS' },
+  { path: '/commandes',      label: 'Commandes',         icon: 'shopping_cart',    moduleKey: 'COMMANDES' },
+  { path: '/retours',        label: 'Retours',           icon: 'assignment_return',moduleKey: 'RETOURS' },
+  { path: '/clients',        label: 'Clients',           icon: 'group',            moduleKey: 'CLIENTS' },
+  { path: '/analyses',       label: 'Analyses',          icon: 'analytics',        moduleKey: 'ANALYSES' },
+  { path: '/collections',    label: 'Collections',       icon: 'category',         moduleKey: 'COLLECTIONS' },
+  { path: '/categories',     label: 'Catégories',        icon: 'folder',           moduleKey: 'CATEGORIES' },
+  { path: '/bannieres',      label: 'Bannières',         icon: 'view_carousel',    moduleKey: 'BANNIERES' },
+  { path: '/tva-livraison',  label: 'TVA & Livraison',   icon: 'local_shipping',   moduleKey: 'TVA_LIVRAISON' },
 ]
 
 const marketingItems = [
-  { path: '/promotions',      label: 'Promotions',      icon: 'campaign' },
-  { path: '/email-marketing', label: 'Email Marketing', icon: 'mail' },
-  { path: '/avis',            label: 'Avis',             icon: 'reviews' },
+  { path: '/promotions',      label: 'Promotions',      icon: 'campaign', moduleKey: 'PROMOTIONS' },
+  { path: '/email-marketing', label: 'Email Marketing', icon: 'mail',     moduleKey: 'EMAIL_MARKETING' },
+  { path: '/avis',            label: 'Avis',            icon: 'reviews',  moduleKey: 'AVIS' },
 ]
 
 const parametresItems = [
-  { path: '/apparence', label: 'Apparence', icon: 'palette' },
-  { path: '/roles', label: 'Rôles & Permissions', icon: 'admin_panel_settings' },
-  { path: '/compte', label: 'Compte & Hébergement', icon: 'settings' },
+  { path: '/apparence', label: 'Apparence',           icon: 'palette',             moduleKey: 'APPARENCE' },
+  { path: '/roles',     label: 'Rôles & Permissions', icon: 'admin_panel_settings', moduleKey: 'ROLES_PERMISSIONS' },
+  { path: '/compte',    label: 'Compte & Hébergement',icon: 'settings',            moduleKey: 'COMPTE_HEBERGEMENT' },
 ]
+
+function canSee(permissions, roleName, moduleKey) {
+  if (roleName === 'SUPER_ADMIN') return true
+  if (!permissions) return false
+  return permissions[moduleKey] === true
+}
 
 function Sidebar() {
   const navigate = useNavigate()
+
+  const storedUser = JSON.parse(localStorage.getItem('user') || '{}')
+  const userPermissions = storedUser.permissions || {}
+  const userRole = storedUser.roleName || ''
 
   /* ── read sidebar layout toggles from CSS custom properties ── */
   const readToggle = useCallback((prop) => {
@@ -100,7 +110,7 @@ function Sidebar() {
 
       {/* Navigation */}
       <nav className="mt-4 px-3 flex-1 space-y-1 overflow-y-auto">
-        {navItems.map((item) => (
+        {navItems.filter(item => canSee(userPermissions, userRole, item.moduleKey)).map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
@@ -117,11 +127,13 @@ function Sidebar() {
           </NavLink>
         ))}
 
-        {/* Marketing Section */}
-        <div className="pt-4 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-          Marketing
-        </div>
-        {marketingItems.map((item) => (
+        {/* Marketing Section — afficher seulement si au moins 1 item visible */}
+        {marketingItems.some(item => canSee(userPermissions, userRole, item.moduleKey)) && (
+          <div className="pt-4 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            Marketing
+          </div>
+        )}
+        {marketingItems.filter(item => canSee(userPermissions, userRole, item.moduleKey)).map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
@@ -138,11 +150,13 @@ function Sidebar() {
           </NavLink>
         ))}
 
-        {/* Paramètres Section */}
-        <div className="pt-4 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-          Paramètres
-        </div>
-        {parametresItems.map((item) => (
+        {/* Paramètres Section — afficher seulement si au moins 1 item visible */}
+        {parametresItems.some(item => canSee(userPermissions, userRole, item.moduleKey)) && (
+          <div className="pt-4 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            Paramètres
+          </div>
+        )}
+        {parametresItems.filter(item => canSee(userPermissions, userRole, item.moduleKey)).map((item) => (
           <NavLink
             key={item.path}
             to={item.path}

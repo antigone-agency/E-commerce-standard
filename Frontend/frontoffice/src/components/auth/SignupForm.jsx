@@ -50,7 +50,7 @@ export default function SignupForm({ onSwitch }) {
       scheduleAutoLogout()
       navigate('/')
     } catch (err) {
-      const msg = err.response?.data?.message || "Erreur lors de la création du compte."
+      const msg = err.response?.data?.error || err.response?.data?.message || "Erreur lors de la création du compte."
       setError(msg)
     } finally {
       setLoading(false)

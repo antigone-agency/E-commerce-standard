@@ -1,9 +1,7 @@
-import { useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { AppearanceProvider } from './context/AppearanceContext'
-import LoadingScreen from './components/LoadingScreen'
 import Layout from './components/layout/Layout'
 import Home from './pages/Home'
 import Cart from './pages/Cart'
@@ -14,11 +12,8 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 
 export default function App() {
-  const [loading, setLoading] = useState(true)
-
   return (
     <AppearanceProvider>
-      {loading && <LoadingScreen onComplete={() => setLoading(false)} />}
       <BrowserRouter>
         <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} theme="colored" />
         <Routes>

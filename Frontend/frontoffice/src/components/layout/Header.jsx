@@ -241,54 +241,116 @@ export default function Header() {
             </button>
 
             {showMenu && user && (
-              <div className="absolute right-0 top-full mt-3 w-56 bg-white shadow-[0_20px_40px_rgba(0,0,0,0.04)] z-50 py-2">
-                <div className="px-5 py-3 border-b border-neutral-100">
-                  <p className="font-bold text-[13px] uppercase tracking-tight text-black">{user.name}</p>
-                  <p className="text-[11px] text-neutral-400 mt-0.5">{user.email}</p>
+              <div
+                className="absolute right-0 top-full mt-4 w-64 z-50"
+                style={{
+                  background: 'rgba(255,255,255,0.72)',
+                  backdropFilter: 'blur(18px)',
+                  WebkitBackdropFilter: 'blur(18px)',
+                  border: '1px solid rgba(255,255,255,0.5)',
+                  borderRadius: '16px',
+                  boxShadow: '0 8px 40px rgba(0,0,0,0.10)',
+                  animation: 'ddFadeDown 0.18s ease both',
+                  overflow: 'hidden',
+                }}
+              >
+                <style>{`
+                  @keyframes ddFadeDown {
+                    from { opacity: 0; transform: translateY(-6px); }
+                    to   { opacity: 1; transform: translateY(0); }
+                  }
+                  .dd-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    width: 100%;
+                    padding: 11px 20px;
+                    font-size: 10px;
+                    font-weight: 700;
+                    letter-spacing: 0.18em;
+                    text-transform: uppercase;
+                    color: #4a4a4a;
+                    background: transparent;
+                    border: none;
+                    cursor: pointer;
+                    text-align: left;
+                    text-decoration: none;
+                    position: relative;
+                    transition: color 0.15s;
+                  }
+                  .dd-item::after {
+                    content: '';
+                    position: absolute;
+                    left: 20px;
+                    right: 20px;
+                    bottom: 0;
+                    height: 1px;
+                    background: #1a1c1c;
+                    transform: scaleX(0);
+                    transform-origin: left;
+                    transition: transform 0.2s ease;
+                  }
+                  .dd-item:hover { color: #1a1c1c; }
+                  .dd-item:hover::after { transform: scaleX(1); }
+                  .dd-item-logout { color: #4a4a4a; }
+                  .dd-item-logout:hover { color: #b91c1c; }
+                  .dd-item-logout::after { background: #b91c1c; }
+                `}</style>
+
+                {/* User identity block */}
+                <div className="px-5 pt-5 pb-4">
+                  <p className="text-[9px] font-bold tracking-[0.3em] uppercase text-neutral-400 mb-1">Mon compte</p>
+                  <p className="font-black text-[15px] uppercase tracking-tight text-[#1a1c1c] leading-none">{user.name}</p>
+                  <p className="text-[10px] text-neutral-400 mt-1 tracking-wide">{user.email}</p>
                 </div>
-                <div className="py-1">
+
+                {/* Thin separator */}
+                <div className="mx-5 border-t border-white/60" />
+
+                {/* Nav items */}
+                <div className="py-2">
                   <button
                     onClick={() => { setShowMenu(false); navigate('/profil') }}
-                    className="w-full flex items-center gap-3 px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-neutral-600 hover:bg-surface-container-low hover:text-black"
+                    className="dd-item"
                   >
-                    <span className="material-symbols-outlined text-[18px]">account_circle</span>
+                    <span className="material-symbols-outlined text-[16px] text-neutral-400">person</span>
                     Mon profil
                   </button>
                   <button
                     onClick={() => { setShowMenu(false); navigate('/commandes') }}
-                    className="w-full flex items-center gap-3 px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-neutral-600 hover:bg-surface-container-low hover:text-black"
+                    className="dd-item"
                   >
-                    <span className="material-symbols-outlined text-[18px]">shopping_bag</span>
+                    <span className="material-symbols-outlined text-[16px] text-neutral-400">package_2</span>
                     Mes commandes
                   </button>
                   {user.roleName && user.roleName !== 'CLIENT' && (
-                  <a
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      setShowMenu(false)
-                      const t = localStorage.getItem('accessToken')
-                      const r = localStorage.getItem('refreshToken')
-                      const u = localStorage.getItem('user')
-                      if (t && r) {
-                        window.location.href = `http://localhost:3000/auth-callback?accessToken=${encodeURIComponent(t)}&refreshToken=${encodeURIComponent(r)}&user=${encodeURIComponent(u || '')}`
-                      } else {
-                        window.location.href = 'http://localhost:3000'
-                      }
-                    }}
-                    className="w-full flex items-center gap-3 px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-neutral-600 hover:bg-surface-container-low hover:text-black"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">dashboard</span>
-                    Dashboard
-                  </a>
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setShowMenu(false)
+                        const t = localStorage.getItem('accessToken')
+                        const r = localStorage.getItem('refreshToken')
+                        const u = localStorage.getItem('user')
+                        if (t && r) {
+                          window.location.href = `http://localhost:3000/auth-callback?accessToken=${encodeURIComponent(t)}&refreshToken=${encodeURIComponent(r)}&user=${encodeURIComponent(u || '')}`
+                        } else {
+                          window.location.href = 'http://localhost:3000'
+                        }
+                      }}
+                      className="dd-item"
+                    >
+                      <span className="material-symbols-outlined text-[16px] text-neutral-400">dashboard</span>
+                      Backoffice
+                    </a>
                   )}
                 </div>
-                <div className="border-t border-neutral-100 pt-1">
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-neutral-600 hover:bg-red-50 hover:text-red-600"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">logout</span>
+
+                {/* Separator + logout */}
+                <div className="mx-5 border-t border-white/60" />
+                <div className="py-2">
+                  <button onClick={handleLogout} className="dd-item dd-item-logout">
+                    <span className="material-symbols-outlined text-[16px]">logout</span>
                     Déconnexion
                   </button>
                 </div>

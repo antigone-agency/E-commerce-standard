@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
+import LoadingScreen from '../components/LoadingScreen'
 
 const products = [
   { name: 'BLAZER STRUCTURÉ', price: '129,00 DT', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAO1WaJWUWGKeVkVIHdSfE6aFy8co2whumXdnYE4ZXrrYX2W7-1bJZvsE5v-tdS84cObJhShv_k-MxlGx1RpNhv2_mdDV0p7NXMiUJ4drgEl1bWyDEGRyYum9mDC77ux0M_IbtIl6UYn_fRoiQASjnHxOvsjreFJwNoLn3vtNrXjwnlvbyxz7_IgVjsdxwsBuZw-9NldoyqVkEeKzc6RO7MHBKOrI2Q0-cs7DEj-J1wrFlh5_yPw5ife_ufFWYFoKw-2t7y4CxGWAip' },
@@ -20,6 +21,8 @@ export default function Home() {
   const [heroIdx, setHeroIdx] = useState(0)
   const [direction, setDirection] = useState('next')
   const [homepageCols, setHomepageCols] = useState({})
+  const [lsGone, setLsGone] = useState(false)
+  const [dataReady, setDataReady] = useState(false)
 
   const heroBanner = heroBanners[heroIdx] || null
 
@@ -32,32 +35,29 @@ export default function Home() {
     setHeroIdx(i => (i + 1) % heroBanners.length)
   }
 
+  // Charger toutes les données en parallèle — dataReady débloque la loading screen
   useEffect(() => {
     const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'
+
+    let segment = ''
     try {
       const userStr = localStorage.getItem('user')
-      const segment = userStr ? JSON.parse(userStr)?.segmentName || '' : ''
-      const url = `${baseURL}/public/banners?position=HOMEPAGE_HERO${segment ? `&segment=${segment}` : ''}`
-      fetch(url)
-        .then((r) => r.ok ? r.json() : { data: [] })
-        .then((json) => {
-          const list = json?.data
-          if (Array.isArray(list) && list.length > 0) {
-            const sorted = [...list].sort((a, b) => (a.priorite ?? 99) - (b.priorite ?? 99))
-            setHeroBanners(sorted)
-            setHeroIdx(0)
-          }
-        })
-        .catch(() => {})
-    } catch {
-      // fail silently
-    }
-  }, [])
+      if (userStr) segment = JSON.parse(userStr)?.segmentName || ''
+    } catch {}
 
-  // Fetch homepage bento collections
-  useEffect(() => {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'
-    fetch(`${baseURL}/public/collections/homepage`)
+    const fetchBanners = fetch(`${baseURL}/public/banners?position=HOMEPAGE_HERO${segment ? `&segment=${segment}` : ''}`)
+      .then(r => r.ok ? r.json() : { data: [] })
+      .then(json => {
+        const list = json?.data
+        if (Array.isArray(list) && list.length > 0) {
+          const sorted = [...list].sort((a, b) => (a.priorite ?? 99) - (b.priorite ?? 99))
+          setHeroBanners(sorted)
+          setHeroIdx(0)
+        }
+      })
+      .catch(() => {})
+
+    const fetchCols = fetch(`${baseURL}/public/collections/homepage`)
       .then(r => r.ok ? r.json() : [])
       .then(data => {
         const list = Array.isArray(data) ? data : (data?.data || [])
@@ -66,6 +66,8 @@ export default function Home() {
         if (Object.keys(map).length > 0) setHomepageCols(map)
       })
       .catch(() => {})
+
+    Promise.all([fetchBanners, fetchCols]).then(() => setDataReady(true))
   }, [])
 
   // Auto-advance slideshow
@@ -81,7 +83,12 @@ export default function Home() {
 
   return (
     <>
+      {/* La LoadingScreen se ferme APRÈS son fade — le contenu rend en dessous pendant ce temps */}
+      {!lsGone && <LoadingScreen onComplete={() => setLsGone(true)} dataReady={dataReady} />}
+      {dataReady && (
+      <>
       {/* ─── Hero Section ─── */}
+      {heroBanners.length > 0 && (
       <section className="relative h-screen w-full overflow-hidden flex items-end justify-center pb-24 px-12">
 
         {/* Background — key forces remount on each slide to restart animation */}
@@ -108,7 +115,7 @@ export default function Home() {
         {/* Text content — key remounts so text also animates */}
         <div key={`content-${heroIdx}`} className="relative z-10 flex flex-col items-center gap-8 hero-content-reveal">
           <h1 className="text-white text-5xl md:text-8xl font-black tracking-[-0.04em] uppercase text-center leading-none drop-shadow-lg">
-            {heroBanner?.titre || 'NOUVELLE COLLECTION'}
+            {heroBanner?.titre}
           </h1>
           {heroBanner?.sousTitre && (
             <p className="text-white/80 text-lg md:text-xl font-medium text-center tracking-wide drop-shadow">
@@ -119,7 +126,7 @@ export default function Home() {
             href={heroBanner?.ctaLien || '#'}
             className="bg-white text-black px-10 py-4 font-bold tracking-[0.1em] text-[12px] uppercase hover:bg-black hover:text-white transition-colors"
           >
-            {heroBanner?.ctaTexte || 'Explorer'}
+            {heroBanner?.ctaTexte}
           </a>
         </div>
 
@@ -160,13 +167,16 @@ export default function Home() {
           </div>
         )}
       </section>
+      )}
 
       {/* ─── Visual Collection Grid (Bento/Editorial) ─── */}
+      {Object.keys(homepageCols).length > 0 && (
       <section className="w-full bg-surface overflow-hidden" style={{ height: '100vh', boxSizing: 'border-box', padding: '72px 16px 16px 16px' }}>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4" style={{ height: '100%' }}>
           {/* Large left panel — principale */}
           {(() => {
             const col = homepageCols['principale']
+            if (!col) return null
             return (
               <div className="md:col-span-7 relative overflow-hidden bg-surface-container" style={{ minHeight: 0 }}>
                 {(col?.bannerUrl || col?.imageUrl) && (
@@ -174,8 +184,8 @@ export default function Home() {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                 <div className="absolute bottom-10 left-10">
-                  <h2 className="text-white text-4xl font-bold uppercase mb-4">{col?.nom || 'NEW IN'}</h2>
-                  <a className="text-white border-b border-white pb-1 text-[11px] font-bold uppercase tracking-widest" href={col ? `/collections/${col.id}` : '#'}>
+                  <h2 className="text-white text-4xl font-bold uppercase mb-4">{col?.nom}</h2>
+                  <a className="text-white border-b border-white pb-1 text-[11px] font-bold uppercase tracking-widest" href={`/collections/${col.id}`}>
                     Voir plus
                   </a>
                 </div>
@@ -188,16 +198,16 @@ export default function Home() {
             {/* Right top — secondaire-haut */}
             {(() => {
               const col = homepageCols['secondaire-haut']
+              if (!col) return null
               return (
                 <div className="relative overflow-hidden bg-surface-container" style={{ minHeight: 0 }}>
-                  {(col?.bannerUrl || col?.imageUrl)
-                    ? <img src={col.bannerUrl || col.imageUrl} alt={col.nom || 'Collection'} className="w-full h-full object-cover" />
-                    : <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmDAzRwjilcshlB77XIYgdAOFq1WOC2bW9CIrWQGKDSO_sZcLEvgI-mlshRoMW72TNTHDgpClu4zsYL58P2R41BLvf5egf6FWamCRsfjWXkqtJKRV2Q4FJWy4k4EDGZWVzJ72Te7yGS9HHIr7e_7V5cvfLaiku53xpo1dxPZ7zeNak20sk7UmqBUWTLh5wEDBhZoEIZhhx-YY_HPN0Xjv9byT6q17J85fsPtKQNdqT3QvufEzEJzXdNu5MTkuk6r1NQNZcZb1gaDVg" alt="Summer collection" className="w-full h-full object-cover" />
-                  }
+                  {(col?.bannerUrl || col?.imageUrl) && (
+                    <img src={col.bannerUrl || col.imageUrl} alt={col.nom || 'Collection'} className="w-full h-full object-cover" />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   <div className="absolute bottom-10 left-10">
-                    <h2 className="text-white text-3xl font-bold uppercase mb-4">{col?.nom || 'SUMMER'}</h2>
-                    <a className="text-white border-b border-white pb-1 text-[11px] font-bold uppercase tracking-widest" href={col ? `/collections/${col.id}` : '#'}>
+                    <h2 className="text-white text-3xl font-bold uppercase mb-4">{col?.nom}</h2>
+                    <a className="text-white border-b border-white pb-1 text-[11px] font-bold uppercase tracking-widest" href={`/collections/${col.id}`}>
                       Voir plus
                     </a>
                   </div>
@@ -207,16 +217,16 @@ export default function Home() {
             {/* Right bottom — secondaire-bas */}
             {(() => {
               const col = homepageCols['secondaire-bas']
+              if (!col) return null
               return (
                 <div className="relative overflow-hidden bg-surface-container" style={{ minHeight: 0 }}>
-                  {(col?.bannerUrl || col?.imageUrl)
-                    ? <img src={col.bannerUrl || col.imageUrl} alt={col.nom || 'Collection'} className="w-full h-full object-cover" />
-                    : <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJclfC_uMNJ0cVszfLpEsjgjU2NGaafPl7VIwRK0N_fiPFaWmRZkBZkORc32HiCcZmTVcUsc6bSBDxAJjQq915pLH5HY07rGAIcZVTFGU5tDeXMCi0M0qYcq6RsybMP8eYSC3ddQGJ24c0afE4qPz0CtXzWni1EwJmxnHBm40shFKEHvwv--pAoAyrOXvZHzWoZ0jqM9jWanrnOdS7HENVesV3NaMDTb-su0AR87CK-ug11Jh7caMxyPe_hJ5BpPwtSO7mqUyI-qQ2" alt="Essentials" className="w-full h-full object-cover" />
-                  }
+                  {(col?.bannerUrl || col?.imageUrl) && (
+                    <img src={col.bannerUrl || col.imageUrl} alt={col.nom || 'Collection'} className="w-full h-full object-cover" />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   <div className="absolute bottom-10 left-10">
-                    <h2 className="text-white text-3xl font-bold uppercase mb-4">{col?.nom || 'ESSENTIALS'}</h2>
-                    <a className="text-white border-b border-white pb-1 text-[11px] font-bold uppercase tracking-widest" href={col ? `/collections/${col.id}` : '#'}>
+                    <h2 className="text-white text-3xl font-bold uppercase mb-4">{col?.nom}</h2>
+                    <a className="text-white border-b border-white pb-1 text-[11px] font-bold uppercase tracking-widest" href={`/collections/${col.id}`}>
                       Voir plus
                     </a>
                   </div>
@@ -226,6 +236,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ─── New Products Grid ─── */}
       <section className="w-full bg-surface overflow-hidden flex flex-col px-6 md:px-12 pb-10" style={{ height: '100vh', paddingTop: '72px' }}>
@@ -307,6 +318,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+      </>
+      )}
     </>
   )
 }

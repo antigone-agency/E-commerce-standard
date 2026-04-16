@@ -39,6 +39,11 @@
             <artifactId>spring-security-web</artifactId>
             <version>6.2.7</version>
         </dependency>
+        <dependency>
+            <groupId>axios</groupId>
+            <artifactId>axios</artifactId>
+            <version>1.15.0</version>
+        </dependency>
 </dependencies>
     </dependencyManagement>
     <dependencies>
